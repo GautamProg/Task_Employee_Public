@@ -1,0 +1,41 @@
+<!-- <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to Employee Dashboard</h2>
+        <p>You have successfully logged in.</p>
+    </div>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Welcome to Employee Dashboard</h2>
+        <p>You have successfully logged in.</p>
+        <button id="logoutButton">Logout</button>
+    </div>
+
+    <script>
+        document.getElementById("logoutButton").addEventListener("click", function() {
+            // Redirect to login page
+            window.location.href = "http://127.0.0.1:8000/loginUI/";
+        });
+    </script>
+</body>
+</html>
