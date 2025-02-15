@@ -11,3 +11,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Autodiscover tasks from installed apps
 app.autodiscover_tasks()
+
+#
+
+# celery -A core worker --loglevel=info

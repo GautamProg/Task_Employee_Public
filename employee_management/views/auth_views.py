@@ -9,6 +9,8 @@ from ..models.models import Employee, SessionLocal, EmployeeOTP, ContactDetails
 from authentication.utils import generate_token, generate_otp, get_employee_from_cache, cache_otp, get_cached_otp
 import bcrypt
 from employee_management.tasks import send_otp_email
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 class LoginView(APIView):
@@ -30,11 +32,11 @@ class LoginView(APIView):
         
         session = SessionLocal()
         try:
-                # employee = session.query(Employee).filter_by(
-                #     employee_id=employee_id,
-                #     is_active=True
-                # ).first()
-                employee = get_employee_from_cache(employee_id)
+                employee = session.query(Employee).filter_by(
+                    employee_id=employee_id,
+                    is_active=True
+                ).first()
+                #employee = get_employee_from_cache(employee_id)
                 
                 if not employee:
                     return Response(
@@ -62,6 +64,8 @@ class LoginView(APIView):
                 if twoFactorValue:
                     otp = generate_otp()
                     employee.two_fa_enabled=True
+                    print("DONE DONE DONE DONE")
+                    session.commit()
 
                     # Store OTP in database
                     otp_entry = EmployeeOTP(
@@ -100,6 +104,19 @@ class LoginView(APIView):
                     employee.two_fa_enabled= False
                     session.commit()
                     token = generate_token(employee.employee_id, employee.role)
+                    
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                    "login_updates",
+                    {
+                        "type": "send_login_update",
+                        "message": {
+                            "employee_id": employee.employee_id,
+                            "message": f"{employee.employee_name} has logged in!"
+                        }
+                    }
+                )
+
                     
                     print("2FA Disabled")
                     return Response({
@@ -184,7 +201,7 @@ class VerifyOTPView(APIView):
                 )
 
             #Check if OTP is expired (valid for 10 minutes)
-            otp_expiry_time = otp_entry.created_on + timedelta(minutes=10)
+            otp_expiry_time = otp_entry.created_on + timedelta(minutes=1)
             if datetime.now(timezone.utc) > otp_expiry_time.replace(tzinfo=timezone.utc):
                 otp_entry.is_expired = True
                 session.commit()
@@ -195,6 +212,22 @@ class VerifyOTPView(APIView):
                     },
                     status=status.HTTP_401_UNAUTHORIZED
                 )
+
+
+            # otp_created_time = otp_entry.created_on
+            # if otp_created_time.tzinfo is None:
+            #     otp_created_time = otp_created_time.replace(tzinfo=timezone.utc)
+
+            # # Check if OTP is expired (valid for 1 minute)
+            # otp_expiry_time = otp_created_time + timedelta(minutes=1)
+
+            # if datetime.now(timezone.utc) > otp_expiry_time:
+            #     otp_entry.is_expired = True
+            #     session.commit()
+            #     return Response(
+            #         {'success': False, 'message': 'OTP has expired. Please request a new one.'},
+            #         status=status.HTTP_401_UNAUTHORIZED
+            #     )
 
             # Mark OTP as used
             otp_entry.is_used = True

@@ -10,7 +10,7 @@ class JWTAuthenticationMiddleware:
 
     def __call__(self, request):
         # Exclude login endpoint from authentication
-        if request.path.endswith(('/login/', '/create/','/verifyOTP/', '/loginUI/', '/verify-otp/', '/dashboard/')):
+        if request.path.endswith(('/login/', '/create/','/verifyOTP/', '/loginUI/', '/verify-otp/', '/dashboard/', '/users/', '/admin/', '/wsUI/')):
             return self.get_response(request)
 
         auth_header = request.headers.get('Authorization')
