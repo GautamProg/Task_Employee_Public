@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Demo</title>
+</head>
+<body>
+    <h2>WebSocket Connection</h2>
+    <button onclick="sendMessage()">Send Message</button>
+    <p id="response"></p>
+
+    <script>
+        // Create WebSocket connection
+        const socket = new WebSocket("ws://localhost:8000/ws/login_updates/");
+
+        // When connection opens
+        socket.onopen = function(event) {
+            console.log("WebSocket connected!");
+        };
+
+        // Listen for messages
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById("response").innerText = "Message from server: " + data.message;
+        };
+
+        // Handle WebSocket errors
+        socket.onerror = function(event) {
+            console.error("WebSocket error:", event);
+        };
+
+        // Handle WebSocket closing
+        socket.onclose = function(event) {
+            console.log("WebSocket closed:", event);
+        };
+
+        // Function to send a message
+        function sendMessage() {
+            socket.send(JSON.stringify({ message: "Hello from client!" }));
+        }
+    </script>
+</body>
+</html>

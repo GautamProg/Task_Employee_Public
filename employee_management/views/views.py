@@ -5,19 +5,22 @@ from django.shortcuts import render
 from sqlalchemy.orm import Session
 from django.core.mail import send_mail
 from django.conf import settings
-from ..models.models import Employee, ContactDetails, AddressDetails, SessionLocal
+from ..models.models import Employee, ContactDetails, AddressDetails, SessionLocal, User
 from ..serializers.serializers import EmployeeCreateSerializer, EmployeeResponseSerializer
 from authentication.permissions import IsEmployee, IsManager, IsAdmin
 from authentication.utils import generate_password, generate_employee_id
 from datetime import datetime
 from employee_management.tasks import send_employee_credentials_email
 from rest_framework.permissions import IsAuthenticated
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
+# permission_classes = [IsManager | IsAdmin]
 
 
 class EmployeeCreateView(APIView):
-   # permission_classes = [IsManager | IsAdmin]
+   
     
     def post(self, request):
         serializer = EmployeeCreateSerializer(data=request.data)
@@ -95,6 +98,16 @@ class EmployeeCreateView(APIView):
             #     fail_silently=False
             # )
             send_employee_credentials_email.delay(employee_email, personal_details['employee_name'], employee_id, password[0])
+
+            # adding this thing for websockets
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "employees",  # Group name
+                {
+                    "type": "send_update",
+                    "message": f"New employee {personal_details['employee_name']} added in {personal_details['department']} department!",
+                },
+            )
             response_data = {
                 "success": True,
                 "status_code": status.HTTP_200_OK,
@@ -186,8 +199,32 @@ def login_view(request):
     return render(request, 'login.html')
 
 
+def ws_view(request):
+    return render(request, 'ws.html')
+
+
 def verify_otp_view(request):
     return render(request, 'verify_otp.html')
 
 def dashboard_view(request):
     return render(request, 'dashboard.html')
+
+
+
+
+
+class UserCreateAPIView(APIView):
+    def post(self, request):
+        session = SessionLocal()
+        try:
+            data = request.data
+            user = User(name=data['name'], email=data['email'], password=data['password'])
+            session.add(user)
+            session.commit()
+            return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            session.rollback()
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        finally:
+            session.close()
+

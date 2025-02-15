@@ -1,6 +1,7 @@
 # employee_management/models/models.py
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, func, create_engine
-from sqlalchemy.ext.declarative import declarative_base
+# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
 
@@ -66,4 +67,17 @@ class EmployeeOTP(Base):
     created_on = Column(DateTime, default=func.now())  # OTP generation time
     updated_on = Column(DateTime, default=func.now(), onupdate=func.now())  # Last updated time
 
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+
+
+
 Base.metadata.create_all(engine)
+
+# hello
