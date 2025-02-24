@@ -1,0 +1,4 @@
+2025-02-19 06:44:03,529 INFO django.utils.autoreload Watching for file changes with StatReloader
+2025-02-19 06:44:54,155 INFO django.server "POST /login/ HTTP/1.1" 200 213
+2025-02-19 06:45:33,160 INFO django.utils.autoreload Watching for file changes with StatReloader
+2025-02-19 06:55:23,062 INFO django.server "POST /login/ HTTP/1.1" 200 213

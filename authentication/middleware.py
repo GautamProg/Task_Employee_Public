@@ -4,15 +4,19 @@ from .utils import verify_token
 # from sqlalchemy.orm import Session
 from employee_management.models.models import Employee, SessionLocal
 
+
+
+import logging
+logger = logging.getLogger('core')
 class JWTAuthenticationMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         # Exclude login endpoint from authentication
-        if request.path.endswith(('/login/', '/create/','/verifyOTP/', '/loginUI/', '/verify-otp/', '/dashboard/', '/users/', '/admin/', '/wsUI/')):
+        if request.path.endswith(('/login/', '/create/', '/verifyOTP/', '/loginUI/', '/verify-otp/', '/dashboard/', '/users/', '/admin/', '/wsUI/')):
             return self.get_response(request)
-
+        logger.info(f"Middleware executing for: {request.path}")  # Debugging line
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return JsonResponse(

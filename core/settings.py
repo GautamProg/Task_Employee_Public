@@ -13,11 +13,16 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from django.conf import settings
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+LOGGING_DIR = os.path.join(settings.BASE_DIR, 'logs') # added this 3 lines for logging
+if not os.path.exists(LOGGING_DIR):
+    os.makedirs(LOGGING_DIR)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -59,7 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'authentication.middleware.JWTAuthenticationMiddleware', 
+    'authentication.middleware.JWTAuthenticationMiddleware', # added this for custom jwt auth class
     'debug_toolbar.middleware.DebugToolbarMiddleware', # added this line for debugger 
 ]
 
@@ -87,14 +92,14 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'employee_management', 'static')  # Ensure static files are loaded
 ]
 
-# WSGI_APPLICATION = 'core.wsgi.application' # commented when using websockets
-ASGI_APPLICATION = "core.asgi.application" # new line added for websocket
+WSGI_APPLICATION = 'core.wsgi.application' # commented when using websockets
+#ASGI_APPLICATION = "core.asgi.application" # new line added for websocket
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis in production
-    },
-} # for websockets
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis in production
+#     },
+# } # for websockets
 
 
 
@@ -233,4 +238,72 @@ CELERY_TASK_SERIALIZER = 'json'
 #     INTERNAL_IPS = [
 #         '127.0.0.1',
 #     ]   # all this were debugger settings
+
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers':False,  # Disable all other logs except the ones we specify
+    'formatters': {
+        'detailed': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',  # The curly brace style is used in the format
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',  # Capture all log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'django.log'),
+            'formatter': 'detailed',  # Use the 'detailed' formatter for timestamps and log levels
+        },
+    },
+    'loggers': {
+        'django': {  # This disables the default Django logger
+            'handlers': ['file'],
+            'level': 'CRITICAL',  # Only capture CRITICAL logs for Django (no unnecessary logs)
+            'propagate': False,
+        },
+        'core': {  # Custom logger for your project
+            'handlers': ['file'],
+            'level': 'DEBUG',  # Capture DEBUG level logs for your app
+            'propagate': False,  # Prevent it from propagating to the parent logger
+        },
+    },
+}
+
+
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,  # Keep existing loggers
+#     'formatters': {
+#         'detailed': {
+#             'format': '{asctime} {levelname} {name} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'detailed',
+#         },
+#         'file': {
+#             'level': 'INFO',
+#             'class': 'logging.FileHandler',
+#             'filename': 'django.log',
+#             'formatter': 'detailed',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console', 'file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
+
+
 

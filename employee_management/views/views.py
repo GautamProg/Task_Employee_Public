@@ -14,6 +14,9 @@ from employee_management.tasks import send_employee_credentials_email
 from rest_framework.permissions import IsAuthenticated
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+# from django.views.decorators.csrf import csrf_exempt
+# from django.utils.decorators import method_decorator
+
 
 
 # permission_classes = [IsManager | IsAdmin]
@@ -21,7 +24,6 @@ from asgiref.sync import async_to_sync
 
 class EmployeeCreateView(APIView):
    
-    
     def post(self, request):
         serializer = EmployeeCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -100,14 +102,7 @@ class EmployeeCreateView(APIView):
             send_employee_credentials_email.delay(employee_email, personal_details['employee_name'], employee_id, password[0])
 
             # adding this thing for websockets
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "employees",  # Group name
-                {
-                    "type": "send_update",
-                    "message": f"New employee {personal_details['employee_name']} added in {personal_details['department']} department!",
-                },
-            )
+           
             response_data = {
                 "success": True,
                 "status_code": status.HTTP_200_OK,
@@ -227,4 +222,14 @@ class UserCreateAPIView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         finally:
             session.close()
+
+
+#  channel_layer = get_channel_layer()
+#             async_to_sync(channel_layer.group_send)(
+#                 "employees",  # Group name
+#                 {
+#                     "type": "send_update",
+#                     "message": f"New employee {personal_details['employee_name']} added in {personal_details['department']} department!",
+#                 },
+#             )
 
